@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Taeil Oh — a flight through the work</title>
+<meta name="description" content="Neural operators for semiconductor device modeling — flown through as a 3D world. Scroll to scrub the camera.">
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --page:#0d0d0d; --ink:#e8e8e4; --mut:#a4a49e;
+    --blue:#5598e7; --accent:#e2604f; --orange:#f28050; --gray:#8a8a86;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:auto}
+  body{background:var(--page);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+    overflow-x:hidden}
+  #spacer{height:900vh}
+  canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* HUD */
+  #hud{position:fixed;top:18px;left:22px;z-index:5;pointer-events:none;
+    font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+  #hud b{color:var(--ink);font-weight:700}
+  @media (max-width:700px){#hudsub{display:none}}
+  #bar{position:fixed;top:0;right:0;width:2px;height:0%;background:var(--blue);z-index:5;opacity:.7}
+  #hint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:5;
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);
+    transition:opacity .5s;pointer-events:none}
+  #hint::after{content:"";display:block;width:1px;height:26px;background:var(--mut);
+    margin:8px auto 0;animation:drip 1.6s ease-in-out infinite}
+  @keyframes drip{0%{transform:scaleY(0);transform-origin:top}
+    50%{transform:scaleY(1);transform-origin:top}
+    51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+  @media (prefers-reduced-motion: reduce){#hint::after{animation:none}}
+
+  /* captions */
+  .cap{position:fixed;z-index:4;pointer-events:none;opacity:0;max-width:420px;
+    left:6vw;bottom:14vh;transform:translateY(12px)}
+  .cap.right{left:auto;right:6vw;text-align:right}
+  .cap .kick{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+  .cap .kick span{color:var(--accent);font-weight:700;margin-right:10px}
+  .cap h2{font-size:clamp(1.3rem,3.2vw,2rem);font-weight:300;line-height:1.2;margin-bottom:10px}
+  .cap h2 b{font-weight:800}
+  .cap p{font-size:.92rem;color:var(--mut);line-height:1.6}
+  .cap p b{color:var(--ink);font-weight:600}
+  .cap a{color:var(--blue);text-decoration:none;pointer-events:auto}
+  #cap-outro{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);
+    text-align:center;max-width:520px}
+  @media (max-width:768px){.cap{left:6vw;right:6vw;max-width:none;bottom:10vh}
+    .cap.right{text-align:left}}
+</style>
+</head>
+<body>
+
+<div id="hud"><b>Taeil Oh</b><span id="hudsub"> · ML for semiconductor device modeling</span></div>
+<div id="bar"></div>
+<div id="hint">scroll to fly</div>
+
+<div class="cap" id="cap-intro">
+  <div class="kick"><span>00</span>AI for semiconductor devices</div>
+  <h2><b>Taeil</b> Oh</h2>
+  <p>Four years of neural operators, physics-informed training, and models that ship —
+     running in production with SK hynix and Samsung. Scroll to fly through the work.</p>
+</div>
+
+<div class="cap right" id="cap-s1">
+  <div class="kick"><span>01</span>neural operator · in production</div>
+  <h2>I–V <b>Retargeting</b></h2>
+  <p>Move a transistor's curve to new electrical targets <b>without breaking its physics</b>.
+     Gray source curves morph onto their blue retargets; orange dots are the target
+     electrical parameters. Running with a memory maker since 2024.</p>
+</div>
+
+<div class="cap" id="cap-s2">
+  <div class="kick"><span>02</span>foundation model · CPU-only training</div>
+  <h2>C–V <b>Foundation Model</b></h2>
+  <p><b>Two measured components in, the full capacitance matrix out.</b>
+     The dense surface grows from a handful of sparse measurements — the reconstruction
+     this model performs, shipped with training that runs on CPU-only servers.</p>
+</div>
+
+<div class="cap right" id="cap-s3">
+  <div class="kick"><span>03</span>SISPAD 2024 · first author</div>
+  <h2>Function-Space <b>Anomaly Detection</b></h2>
+  <p>Catching <b>physically wrong curves</b> before they poison a model.
+     One curve in this stream is drifting off the physics — the red one, already ringed.</p>
+</div>
+
+<div class="cap" id="cap-s4">
+  <div class="kick"><span>04</span>agentic workflow · in active development</div>
+  <h2>Agentic <b>Model Fitting</b></h2>
+  <p>Plan → tools → a plot-reading check → <b>physics as the gate</b>.
+     The fitting loop engineers run by hand, automated end to end — every result
+     checked against physics before it is accepted. In active development on a shipping platform.</p>
+</div>
+
+<div class="cap" id="cap-outro">
+  <div class="kick">end of flight</div>
+  <h2>That was the <b>work</b>.</h2>
+  <p>Neural operators, physics losses, and models running inside customer walls.<br><br>
+     <a href="../portfolio.html">Full portfolio →</a> &nbsp;·&nbsp;
+     <a href="https://www.linkedin.com/in/taeil-oh-0b497216b" target="_blank" rel="noopener">LinkedIn</a></p>
+</div>
+
+<div id="spacer"></div>
+<canvas id="gl"></canvas>
+
+<script src="vendor/three.js"></script>
+<script>
+(function(){
+'use strict';
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MOBILE = matchMedia('(max-width: 768px)').matches;
+const COL = {page:0x0d0d0d, ink:0xe8e8e4, mut:0xa4a49e,
+  blue:0x5598e7, accent:0xe2604f, orange:0xf28050, gray:0x8a8a86};
+
+// ── renderer / scene ─────────────────────────────────────────
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio, MOBILE ? 1.5 : 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(COL.page);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(COL.page, 26, 105);
+const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 260);
+
+// ── procedural sprite textures (canvas-drawn, no image files) ─
+function glowTexture(){
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const r = g.createRadialGradient(32,32,0,32,32,32);
+  r.addColorStop(0,'rgba(255,255,255,1)');
+  r.addColorStop(0.25,'rgba(255,255,255,.6)');
+  r.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0,0,64,64);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const GLOW = glowTexture();
+
+function textSprite(text, colorCss, px){
+  px = px || 44;
+  const c = document.createElement('canvas'); const g = c.getContext('2d');
+  g.font = `600 ${px}px -apple-system,'Segoe UI',sans-serif`;
+  const w = Math.ceil(g.measureText(text).width) + 20;
+  c.width = w; c.height = px + 26;
+  g.font = `600 ${px}px -apple-system,'Segoe UI',sans-serif`;
+  g.textBaseline = 'middle'; g.textAlign = 'center';
+  g.shadowColor = colorCss; g.shadowBlur = 12;
+  g.fillStyle = colorCss; g.fillText(text, w/2, c.height/2);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.SpriteMaterial({map:t, transparent:true, depthWrite:false});
+  const s = new THREE.Sprite(m);
+  const scale = 0.0085;
+  s.scale.set(c.width*scale, c.height*scale, 1);
+  return s;
+}
+function glowSprite(color, size, opacity){
+  const m = new THREE.SpriteMaterial({map:GLOW, color, transparent:true,
+    opacity:(opacity===undefined?0.9:opacity), blending:THREE.AdditiveBlending, depthWrite:false});
+  const s = new THREE.Sprite(m); s.scale.set(size,size,1); return s;
+}
+
+// ── pulse system: glow points traveling along sampled paths ──
+function makePulseSystem(color, size){
+  const geo = new THREE.BufferGeometry();
+  const sys = {paths:[], pts:null, geo,
+    mat: new THREE.PointsMaterial({map:GLOW, color, size, transparent:true,
+      opacity:.95, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true}),
+    add(points, speed, offset){ this.paths.push({points, speed, offset}); },
+    build(parent){
+      const n = this.paths.length;
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3));
+      this.pts = new THREE.Points(geo, this.mat);
+      this.pts.frustumCulled = false;
+      parent.add(this.pts);
+    },
+    update(t){
+      const a = geo.attributes.position;
+      for(let i=0;i<this.paths.length;i++){
+        const p = this.paths[i];
+        const u = ((t*p.speed + p.offset) % 1 + 1) % 1;
+        const f = u * (p.points.length-1);
+        const k = Math.min(Math.floor(f), p.points.length-2), fr = f-k;
+        const A = p.points[k], B = p.points[k+1];
+        a.setXYZ(i, A.x+(B.x-A.x)*fr, A.y+(B.y-A.y)*fr, A.z+(B.z-A.z)*fr);
+      }
+      a.needsUpdate = true;
+    }};
+  return sys;
+}
+
+// ── starfield ────────────────────────────────────────────────
+(function(){
+  const N = MOBILE ? 1200 : 2600;
+  const pos = new Float32Array(N*3), col = new Float32Array(N*3);
+  const tints = [new THREE.Color(0x9fb8d8), new THREE.Color(0x5598e7),
+                 new THREE.Color(0xe8e8e4), new THREE.Color(0xf28050)];
+  for(let i=0;i<N;i++){
+    pos[i*3]   = (Math.random()-0.5)*180;
+    pos[i*3+1] = -18 + Math.random()*70;
+    pos[i*3+2] = 45 - Math.random()*265;
+    const c = tints[Math.random()<0.06?3:(Math.random()*3|0)];
+    const b = 0.25 + Math.random()*0.75;
+    col[i*3]=c.r*b; col[i*3+1]=c.g*b; col[i*3+2]=c.b*b;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color', new THREE.BufferAttribute(col,3));
+  const m = new THREE.PointsMaterial({map:GLOW, size:0.55, vertexColors:true,
+    transparent:true, opacity:.8, blending:THREE.AdditiveBlending, depthWrite:false});
+  const p = new THREE.Points(g,m); p.frustumCulled=false; scene.add(p);
+})();
+
+// ── grid floor ───────────────────────────────────────────────
+const grid = new THREE.GridHelper(460, 92, 0x1e2c3e, 0x141d29);
+grid.position.y = -2.4;
+grid.material.transparent = true; grid.material.opacity = 0.8;
+scene.add(grid);
+
+// ── wafer (intro monument) ───────────────────────────────────
+const wafer = new THREE.Group();
+(function(){
+  const R = 4.2;
+  // outline
+  const ring = [];
+  for(let i=0;i<=140;i++){const a=i/140*Math.PI*2; ring.push(new THREE.Vector3(Math.cos(a)*R, Math.sin(a)*R, 0));}
+  wafer.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ring),
+    new THREE.LineBasicMaterial({color:COL.blue, transparent:true, opacity:.75,
+      blending:THREE.AdditiveBlending})));
+  // die grid clipped to circle
+  const seg = [], step = 0.62, r2 = (R-0.18)*(R-0.18);
+  for(let x=-R;x<=R;x+=step){
+    const h2 = r2 - x*x; if(h2<=0) continue; const h = Math.sqrt(h2);
+    seg.push(x,-h,0, x,h,0, -h,x,0, h,x,0);
+  }
+  wafer.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(seg),3)),
+    new THREE.LineBasicMaterial({color:COL.blue, transparent:true, opacity:.22,
+      blending:THREE.AdditiveBlending})));
+  // yield-map dies: a few glowing cells
+  const die = new THREE.PlaneGeometry(step*0.8, step*0.8);
+  let s = 7;
+  const rnd = ()=> (s = s*16807 % 2147483647) / 2147483647;
+  for(let i=0;i<16;i++){
+    const gx = Math.round((rnd()-0.5)*10)*step, gy = Math.round((rnd()-0.5)*10)*step;
+    if(gx*gx+gy*gy > r2*0.72) continue;
+    const bad = rnd() < 0.22;
+    const m = new THREE.Mesh(die, new THREE.MeshBasicMaterial({
+      color: bad?COL.accent:COL.blue, transparent:true, opacity: bad?0.5:0.3,
+      blending:THREE.AdditiveBlending, side:THREE.DoubleSide, depthWrite:false}));
+    m.position.set(gx,gy,0.01); wafer.add(m);
+  }
+  wafer.position.set(0,2.1,0);
+  wafer.rotation.x = -0.28;
+  scene.add(wafer);
+})();
+
+// ── silicon lattice (diamond cubic), reused 3× ───────────────
+function makeLattice(){
+  const g = new THREE.Group();
+  const a = 1.15, cells = 2, atoms = [];
+  const basis = [[0,0,0],[0,.5,.5],[.5,0,.5],[.5,.5,0],
+                 [.25,.25,.25],[.25,.75,.75],[.75,.25,.75],[.75,.75,.25]];
+  for(let i=0;i<cells;i++)for(let j=0;j<cells;j++)for(let k=0;k<cells;k++)
+    for(const b of basis) atoms.push(new THREE.Vector3((i+b[0])*a,(j+b[1])*a,(k+b[2])*a));
+  // dedupe
+  const uniq = [];
+  for(const p of atoms) if(!uniq.some(q=>q.distanceToSquared(p)<1e-6)) uniq.push(p);
+  const center = new THREE.Vector3(cells*a/2, cells*a/2, cells*a/2);
+  uniq.forEach(p=>p.sub(center));
+  // bonds: nearest-neighbor distance = a*sqrt(3)/4
+  const bond = a*Math.sqrt(3)/4 + 1e-3, seg = [];
+  for(let i=0;i<uniq.length;i++)for(let j=i+1;j<uniq.length;j++)
+    if(uniq[i].distanceTo(uniq[j]) < bond+0.02)
+      seg.push(uniq[i].x,uniq[i].y,uniq[i].z, uniq[j].x,uniq[j].y,uniq[j].z);
+  g.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(seg),3)),
+    new THREE.LineBasicMaterial({color:COL.blue, transparent:true, opacity:.35,
+      blending:THREE.AdditiveBlending})));
+  const pos = new Float32Array(uniq.length*3);
+  uniq.forEach((p,i)=>{pos[i*3]=p.x;pos[i*3+1]=p.y;pos[i*3+2]=p.z;});
+  g.add(new THREE.Points(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(pos,3)),
+    new THREE.PointsMaterial({map:GLOW, color:0xbcd2ee, size:0.42, transparent:true,
+      opacity:.9, blending:THREE.AdditiveBlending, depthWrite:false})));
+  return g;
+}
+const lattices = [];
+[[9,3.4,-16, 1], [-2.5,4.6,-86, .8], [1.5,4.8,-120, .65]].forEach(([x,y,z,s])=>{
+  const l = makeLattice(); l.position.set(x,y,z); l.scale.setScalar(s);
+  l.rotation.set(Math.random()*2, Math.random()*2, 0);
+  scene.add(l); lattices.push(l);
+});
+
+// ═════════ STATION 1 · I–V retargeting: morphing glow ribbons ═════════
+// EKV-style curve family — same math as the portfolio's live demo.
+const s1 = new THREE.Group(); s1.position.set(-14, 2.2, -34); s1.rotation.y = 0.28;
+scene.add(s1);
+const S1 = {ribbons:[], M:150, N:7, dots:null, dotPos:null};
+(function(){
+  const softplus = x => Math.log(1+Math.exp(Math.min(x,40)));
+  S1.ekv = (v,vt,ss,ion)=>{const g=softplus((v-vt)/ss); return 8e-13 + ion*3.2*Math.pow(ss*g,2);};
+  S1.mapX = v => (v/1.2)*7 - 3.5;
+  S1.mapY = I => -2.2 + 4.4*((Math.log10(I)+12.1)/9.9);
+  for(let i=0;i<S1.N;i++){
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(S1.M*2*3),3));
+    const idx = [];
+    for(let k=0;k<S1.M-1;k++){const a=k*2; idx.push(a,a+1,a+2, a+1,a+3,a+2);}
+    geo.setIndex(idx);
+    const mat = new THREE.MeshBasicMaterial({color:COL.gray, transparent:true, opacity:.85,
+      blending:THREE.AdditiveBlending, side:THREE.DoubleSide, depthWrite:false});
+    const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false;
+    mesh.position.z = (i-(S1.N-1)/2)*0.55;
+    s1.add(mesh); S1.ribbons.push(mesh);
+  }
+  // axes
+  const ax = new Float32Array([-3.6,-2.3,0, 3.6,-2.3,0,  -3.6,-2.3,0, -3.6,2.4,0]);
+  s1.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(ax,3)),
+    new THREE.LineBasicMaterial({color:COL.mut, transparent:true, opacity:.35})));
+  const lx = textSprite('V_GS', '#a4a49e', 24); lx.position.set(3.3,-2.7,0); s1.add(lx);
+  const ly = textSprite('log I_D', '#a4a49e', 24); ly.position.set(-4.3,2.2,0); s1.add(ly);
+  // static gray ghosts of the source curves (so source vs retarget reads in a still)
+  for(let i=0;i<S1.N;i++){
+    const vt = 0.44+0.03*i, ion = 6e-4*(1+0.08*i);
+    const pts = [];
+    for(let k=0;k<S1.M;k+=2){
+      const v = k/(S1.M-1)*1.2;
+      pts.push(new THREE.Vector3(S1.mapX(v), S1.mapY(S1.ekv(v,vt,0.075,ion)), (i-(S1.N-1)/2)*0.55));
+    }
+    s1.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({color:COL.gray, transparent:true, opacity:.3,
+        blending:THREE.AdditiveBlending})));
+  }
+  // target-EP dots (3 orange glows on the middle ribbon)
+  S1.dotPos = new Float32Array(9);
+  const dg = new THREE.BufferGeometry();
+  dg.setAttribute('position', new THREE.BufferAttribute(S1.dotPos,3));
+  S1.dots = new THREE.Points(dg, new THREE.PointsMaterial({map:GLOW, color:COL.orange,
+    size:1.0, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false}));
+  S1.dots.frustumCulled = false; s1.add(S1.dots);
+})();
+const C_GRAY = new THREE.Color(COL.gray), C_BLUE = new THREE.Color(COL.blue);
+function updateS1(act, t){
+  const {M,N,ekv,mapX,mapY} = S1;
+  for(let i=0;i<N;i++){
+    const u = THREE.MathUtils.smoothstep(act*1.25 - i*0.045, 0, 1);
+    const vtS = 0.44+0.03*i, ionS = 6e-4*(1+0.08*i);
+    const vt = vtS + (-0.13)*u, ss = 0.075 + (0.060-0.075)*u, ion = ionS*(1+0.7*u);
+    const pos = S1.ribbons[i].geometry.attributes.position.array;
+    let px=0, py=0;
+    for(let k=0;k<M;k++){
+      const v = k/(M-1)*1.2;
+      const x = mapX(v), y = mapY(ekv(v,vt,ss,ion));
+      let dx = x-px, dy = y-py;
+      if(k===0){dx=1;dy=0;}
+      const inv = 0.055/Math.hypot(dx,dy);
+      const nx = -dy*inv, ny = dx*inv;
+      const o = k*6;
+      pos[o]=x+nx; pos[o+1]=y+ny; pos[o+2]=0;
+      pos[o+3]=x-nx; pos[o+4]=y-ny; pos[o+5]=0;
+      px=x; py=y;
+    }
+    S1.ribbons[i].geometry.attributes.position.needsUpdate = true;
+    S1.ribbons[i].material.color.copy(C_GRAY).lerp(C_BLUE, u);
+    S1.ribbons[i].material.opacity = 0.55 + 0.35*u;
+  }
+  // EP dots on middle ribbon's target curve
+  const mid = (N-1)/2|0, vtS = 0.44+0.03*mid, ionS = 6e-4*(1+0.08*mid);
+  const uMid = THREE.MathUtils.smoothstep(act*1.25 - mid*0.045, 0, 1);
+  const vt = vtS-0.13*uMid, ss = 0.075-0.015*uMid, ion = ionS*(1+0.7*uMid);
+  const z = S1.ribbons[mid].position.z + 0.02;
+  [[0.42],[0.8],[1.15]].forEach(([v],j)=>{
+    S1.dotPos[j*3] = S1.mapX(v);
+    S1.dotPos[j*3+1] = S1.mapY(S1.ekv(v,vt,ss,ion));
+    S1.dotPos[j*3+2] = z;
+  });
+  S1.dots.geometry.attributes.position.needsUpdate = true;
+  S1.dots.material.opacity = act * (0.75 + 0.25*Math.sin(t*3));
+}
+
+// ═════════ STATION 2 · C–V surface growing from 8 sparse points ═══════
+const s2 = new THREE.Group(); s2.position.set(12, 1.6, -70); s2.rotation.y = -0.56;
+scene.add(s2);
+const S2 = {};
+(function(){
+  const sig = (v,vt,k)=>1/(1+Math.exp(-k*(v-vt)));
+  const cv = (vg,vb)=> 0.18 + 0.82*sig(vg-0.22*vb,0,6)
+                     - 0.12*Math.exp(-Math.pow((vg+0.35-0.15*vb)/0.28,2));
+  const NX = 64, NZ = 32;
+  const n = NX*NZ;
+  const target = new Float32Array(n*3), start = new Float32Array(n*3),
+        delay = new Float32Array(n), color = new Float32Array(n*3);
+  // 8 sparse anchors along vb=0
+  const anchors = [];
+  for(let i=0;i<8;i++){
+    const vg = -1.4 + i*(2.8/7);
+    anchors.push(new THREE.Vector3(vg*2.6, cv(vg,0)*3.2-1.4, 0));
+  }
+  const cLow = new THREE.Color(0x2a5f9e), cHigh = new THREE.Color(COL.orange);
+  const tmp = new THREE.Color();
+  let s = 3; const rnd = ()=> (s = s*16807 % 2147483647) / 2147483647;
+  let q = 0, maxD = 0;
+  for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++,q++){
+    const vg = -1.4 + i*(2.8/(NX-1)), vb = -1 + j*(2/(NZ-1));
+    const y = cv(vg,vb);
+    const T = new THREE.Vector3(vg*2.6, y*3.2-1.4, vb*2.6);
+    target[q*3]=T.x; target[q*3+1]=T.y; target[q*3+2]=T.z;
+    let best = anchors[0], bd = 1e9;
+    for(const A of anchors){const d=A.distanceToSquared(T); if(d<bd){bd=d;best=A;}}
+    start[q*3]=best.x; start[q*3+1]=best.y; start[q*3+2]=best.z;
+    const d = Math.sqrt(bd); if(d>maxD) maxD=d;
+    delay[q] = d;
+    tmp.copy(cLow).lerp(cHigh, THREE.MathUtils.clamp((y-0.06)/0.95,0,1));
+    color[q*3]=tmp.r; color[q*3+1]=tmp.g; color[q*3+2]=tmp.b;
+  }
+  for(let i=0;i<n;i++) delay[i] = (delay[i]/maxD)*0.62 + rnd()*0.08;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(target,3));
+  geo.setAttribute('aStart', new THREE.BufferAttribute(start,3));
+  geo.setAttribute('aDelay', new THREE.BufferAttribute(delay,1));
+  geo.setAttribute('color', new THREE.BufferAttribute(color,3));
+  S2.uni = {uGrow:{value:0}, uTex:{value:GLOW}, uSize:{value: MOBILE?4.5:6.0}};
+  const mat = new THREE.ShaderMaterial({
+    uniforms: S2.uni, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    vertexShader:`
+      attribute vec3 aStart; attribute float aDelay;
+      uniform float uGrow; uniform float uSize;
+      varying vec3 vC; varying float vA;
+      void main(){
+        float u = smoothstep(0.0, 1.0, clamp((uGrow-aDelay)/0.35, 0.0, 1.0));
+        vec3 p = mix(aStart, position, u);
+        vA = 0.15 + 0.85*u;
+        vC = color;
+        vec4 mv = modelViewMatrix * vec4(p,1.0);
+        gl_PointSize = uSize * (34.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader:`
+      uniform sampler2D uTex; varying vec3 vC; varying float vA;
+      void main(){ gl_FragColor = vec4(vC,1.0) * texture2D(uTex, gl_PointCoord) * vA; }`,
+    vertexColors:true});
+  const pts = new THREE.Points(geo, mat); pts.frustumCulled=false; s2.add(pts);
+  // wireframe hint at final surface (fades in with growth)
+  const seg = [];
+  const P = (i,j)=>{const k=(j*NX+i)*3; return [target[k],target[k+1],target[k+2]];};
+  for(let j=0;j<NZ;j+=6) for(let i=0;i<NX-4;i+=4) seg.push(...P(i,j),...P(i+4,j));
+  for(let i=0;i<NX;i+=8) for(let j=0;j<NZ-4;j+=4) seg.push(...P(i,j),...P(i,j+4));
+  S2.wire = new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(seg),3)),
+    new THREE.LineBasicMaterial({color:COL.blue, transparent:true, opacity:0,
+      blending:THREE.AdditiveBlending}));
+  s2.add(S2.wire);
+  // anchor glows
+  S2.anchorSprites = anchors.map(A=>{
+    const sp = glowSprite(COL.orange, 0.85, 0.95); sp.position.copy(A).add(new THREE.Vector3(0,0.02,0));
+    s2.add(sp); return sp;
+  });
+  const lb = textSprite('sparse in → full C–V surface', '#a4a49e', 30);
+  lb.position.set(0,-2.2,0); s2.add(lb);
+})();
+function updateS2(act, t){
+  S2.uni.uGrow.value = act;
+  S2.wire.material.opacity = 0.28*act*act;
+  S2.anchorSprites.forEach((sp,i)=>{
+    const k = 1 + 0.14*Math.sin(t*2.4 + i*0.9);
+    sp.scale.set(0.85*k, 0.85*k, 1);
+  });
+}
+
+// ═════════ STATION 3 · anomaly: one red curve leaves the stream ═══════
+const s3 = new THREE.Group(); s3.position.set(-12, 3.0, -104); s3.rotation.y = 1.75;
+scene.add(s3);
+const S3 = {lines:22, M:90, paths:[]};
+const s3pulses = makePulseSystem(0x9fc2ee, 0.3);
+(function(){
+  let s = 11; const rnd = ()=> (s = s*16807 % 2147483647) / 2147483647;
+  const seg = [];
+  for(let i=0;i<S3.lines;i++){
+    const th = rnd()*Math.PI*2, r = 0.25 + rnd()*0.95;
+    const ox = Math.cos(th)*r, oy = Math.sin(th)*r*0.7;
+    const ph = rnd()*6.28, ph2 = rnd()*6.28;
+    const pts = [];
+    for(let k=0;k<S3.M;k++){
+      const t = k/(S3.M-1)*2-1;
+      pts.push(new THREE.Vector3(
+        ox + 0.28*Math.sin(t*2.2+ph),
+        oy + 0.22*Math.sin(t*1.7+ph2),
+        t*6));
+    }
+    S3.paths.push(pts);
+    for(let k=0;k<S3.M-1;k++) seg.push(pts[k].x,pts[k].y,pts[k].z, pts[k+1].x,pts[k+1].y,pts[k+1].z);
+    s3pulses.add(pts, 0.10+rnd()*0.1, rnd());
+  }
+  s3.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(seg),3)),
+    new THREE.LineBasicMaterial({color:0x6f92c2, transparent:true, opacity:.42,
+      blending:THREE.AdditiveBlending})));
+  s3pulses.build(s3);
+  // anomalous curve (rebuilt per frame)
+  S3.anomBase = S3.paths[4];
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(S3.M*3),3));
+  S3.anom = new THREE.Line(geo, new THREE.LineBasicMaterial({color:COL.accent,
+    transparent:true, opacity:.95, blending:THREE.AdditiveBlending}));
+  S3.anom.frustumCulled = false; s3.add(S3.anom);
+  // containment ring + glow at apex
+  S3.ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.018, 8, 48),
+    new THREE.MeshBasicMaterial({color:COL.accent, transparent:true, opacity:0,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  s3.add(S3.ring);
+  S3.glow = glowSprite(COL.accent, 1.4, 0); s3.add(S3.glow);
+  const lb = textSprite('reconstruction error = anomaly score', '#a4a49e', 30);
+  lb.position.set(0,-1.9,0); s3.add(lb);
+})();
+function updateS3(act, t){
+  const pos = S3.anom.geometry.attributes.position.array;
+  let apex = null, amax = -1;
+  for(let k=0;k<S3.M;k++){
+    const tt = k/(S3.M-1)*2-1;
+    const b = S3.anomBase[k];
+    const env = Math.exp(-Math.pow((tt-0.15)/0.4,2));
+    const d = env * act * 1.5 * (1 + 0.05*Math.sin(t*5+tt*4));
+    const x = b.x + d*0.85, y = b.y + d*0.75, z = b.z;
+    pos[k*3]=x; pos[k*3+1]=y; pos[k*3+2]=z;
+    if(env>amax){amax=env; apex=[x,y,z];}
+  }
+  S3.anom.geometry.attributes.position.needsUpdate = true;
+  S3.anom.material.opacity = 0.5 + 0.5*act*(0.7+0.3*Math.sin(t*4));
+  S3.ring.position.set(apex[0],apex[1],apex[2]);
+  S3.ring.lookAt(camera.position);
+  const k = 1 + 0.05*Math.sin(t*3.2);
+  S3.ring.scale.set(k,k,k);
+  S3.ring.material.opacity = act*0.9;
+  S3.glow.position.set(apex[0],apex[1],apex[2]);
+  S3.glow.material.opacity = act*0.5;
+}
+
+// ═════════ STATION 4 · agentic loop: node graph with light pulses ═════
+const s4 = new THREE.Group(); s4.position.set(8, 3.0, -138); s4.rotation.y = 0.46;
+scene.add(s4);
+const S4 = {nodes:[]};
+const s4pulses = makePulseSystem(0x8fd0ff, 0.62);
+(function(){
+  const R = 2.5;
+  const defs = [
+    {name:'PLAN',         color:COL.blue,   a: Math.PI*0.5},
+    {name:'TOOLS',        color:COL.ink,    a: Math.PI*1.0},
+    {name:'VLM CHECK',    color:COL.orange, a: Math.PI*1.5},
+    {name:'PHYSICS GATE', color:COL.accent, a: 0}];
+  const P = defs.map(d=> new THREE.Vector3(Math.cos(d.a)*R, Math.sin(d.a)*R, 0));
+  const wireGeo = new THREE.IcosahedronGeometry(0.24, 1);
+  defs.forEach((d,i)=>{
+    const node = new THREE.Group(); node.position.copy(P[i]);
+    const w = new THREE.Mesh(wireGeo, new THREE.MeshBasicMaterial({color:d.color,
+      wireframe:true, transparent:true, opacity:.85}));
+    node.add(w);
+    node.add(glowSprite(d.color, 1.05, 0.8));
+    const lb = textSprite(d.name, '#'+new THREE.Color(d.color).getHexString(), 34);
+    lb.position.y = -0.62; node.add(lb);
+    s4.add(node); S4.nodes.push({node, wire:w});
+  });
+  // edges: bezier arcs between consecutive nodes; one closed pulse path
+  const seg = [], loopPts = [];
+  for(let i=0;i<4;i++){
+    const A = P[i], B = P[(i+1)%4];
+    const mid = A.clone().add(B).multiplyScalar(0.5);
+    const out = mid.clone().normalize().multiplyScalar(0.9);
+    const ctrl = mid.add(out); ctrl.z = (i%2? -0.5 : 0.5);
+    const curve = new THREE.QuadraticBezierCurve3(A, ctrl, B);
+    const pts = curve.getPoints(48);
+    for(let k=0;k<pts.length-1;k++) seg.push(pts[k].x,pts[k].y,pts[k].z, pts[k+1].x,pts[k+1].y,pts[k+1].z);
+    for(let k=0;k<pts.length-1;k++) loopPts.push(pts[k]);
+  }
+  loopPts.push(loopPts[0].clone());
+  s4.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(seg),3)),
+    new THREE.LineBasicMaterial({color:0x5b7ca8, transparent:true, opacity:.5,
+      blending:THREE.AdditiveBlending})));
+  for(let i=0;i<6;i++) s4pulses.add(loopPts, 0.16, i/6);
+  s4pulses.build(s4);
+  S4.center = glowSprite(COL.blue, 2.6, 0.14); s4.add(S4.center);
+  const lb = textSprite('the loop runs until physics passes', '#a4a49e', 30);
+  lb.position.set(0,-3.4,0); s4.add(lb);
+})();
+function updateS4(act, t){
+  s4.rotation.z = 0.06*Math.sin(t*0.5);
+  S4.nodes.forEach((n,i)=>{
+    n.wire.rotation.y = t*0.6 + i;
+    n.wire.rotation.x = t*0.4;
+    const k = 1 + 0.1*Math.sin(t*2.2 + i*1.6);
+    n.wire.scale.set(k,k,k);
+  });
+  s4pulses.mat.opacity = 0.25 + 0.75*act;
+  S4.center.material.opacity = 0.05 + 0.2*act*(0.7+0.3*Math.sin(t*1.3));
+}
+
+// ── current line threading the whole world ───────────────────
+const worldPulses = makePulseSystem(COL.orange, 0.7);
+(function(){
+  const spine = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0,0.4,4), new THREE.Vector3(-14,0.7,-34),
+    new THREE.Vector3(12,0.3,-70), new THREE.Vector3(-12,1.0,-104),
+    new THREE.Vector3(8,1.2,-138), new THREE.Vector3(0,2.0,-168)]);
+  const pts = spine.getPoints(360);
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:0x33587f, transparent:true, opacity:.35,
+      blending:THREE.AdditiveBlending})));
+  for(let i=0;i<7;i++) worldPulses.add(pts, 0.028, i/7);
+  worldPulses.build(scene);
+})();
+
+// ── camera flight path ───────────────────────────────────────
+const camPath = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0, 5.5, 26),   new THREE.Vector3(0, 3.2, 12),
+  new THREE.Vector3(-5, 2.6, -6),  new THREE.Vector3(-9.5, 3.0, -20),
+  new THREE.Vector3(-18.5, 2.8, -43.5), new THREE.Vector3(-6, 3.0, -54),
+  new THREE.Vector3(7, 3.0, -62),  new THREE.Vector3(13.5, 4.4, -76),
+  new THREE.Vector3(4, 3.4, -90),  new THREE.Vector3(-8, 3.0, -98),
+  new THREE.Vector3(-13.5, 3.0, -112), new THREE.Vector3(-4, 3.0, -124),
+  new THREE.Vector3(5, 3.0, -132), new THREE.Vector3(10, 3.4, -146),
+  new THREE.Vector3(4, 9, -157),   new THREE.Vector3(-2, 16, -152)]);
+const lookPath = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0,2.1,0),      new THREE.Vector3(0,2.1,0),
+  new THREE.Vector3(-8,2.2,-20),   new THREE.Vector3(-14,2.2,-34),
+  new THREE.Vector3(-14,2.2,-34),  new THREE.Vector3(2,2,-58),
+  new THREE.Vector3(12,1.8,-70),   new THREE.Vector3(12,1.6,-70),
+  new THREE.Vector3(-2,2.5,-92),   new THREE.Vector3(-12,3,-104),
+  new THREE.Vector3(-12,3,-104),   new THREE.Vector3(0,2.8,-126),
+  new THREE.Vector3(8,3,-138),     new THREE.Vector3(8,3,-138),
+  new THREE.Vector3(2,3,-136),     new THREE.Vector3(0,1,-92)]);
+
+// station centers in scroll-progress space
+const KEY = {intro:0.055, s1:0.267, s2:0.467, s3:0.667, s4:0.867, outro:0.975};
+const caps = [
+  {el:document.getElementById('cap-intro'), c:KEY.intro, h:0.075},
+  {el:document.getElementById('cap-s1'),    c:KEY.s1,    h:0.085},
+  {el:document.getElementById('cap-s2'),    c:KEY.s2,    h:0.085},
+  {el:document.getElementById('cap-s3'),    c:KEY.s3,    h:0.085},
+  {el:document.getElementById('cap-s4'),    c:KEY.s4,    h:0.085},
+  {el:document.getElementById('cap-outro'), c:KEY.outro, h:0.12}];
+const bar = document.getElementById('bar'), hint = document.getElementById('hint');
+
+// station activation: eases in as the camera approaches, holds through pass
+const activation = c => THREE.MathUtils.smoothstep(0.16 - Math.abs(cur - c + 0.02), 0.0, 0.13);
+
+// ── scroll ───────────────────────────────────────────────────
+let target = 0, cur = 0;
+function readScroll(){
+  const max = document.documentElement.scrollHeight - innerHeight;
+  target = max > 0 ? Math.min(scrollY/max, 1) : 0;
+}
+addEventListener('scroll', readScroll, {passive:true});
+readScroll();
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── frame loop ───────────────────────────────────────────────
+const _look = new THREE.Vector3();
+let last = performance.now();
+function frame(now){
+  const dt = Math.min((now-last)/1000, 0.05); last = now;
+  const t = RM ? 1.0 : now/1000;
+
+  if(RM){
+    // reduced motion: snap to nearest station viewpoint, no flight
+    let best = KEY.intro, bd = 9;
+    for(const k in KEY){const d = Math.abs(target-KEY[k]); if(d<bd){bd=d;best=KEY[k];}}
+    cur = Math.max(best - 0.06, 0); // hold back from the station so it stays framed
+  }else{
+    cur += (target-cur) * (1 - Math.exp(-dt*5.5));
+  }
+  const p = THREE.MathUtils.clamp(cur, 0, 1);
+
+  camPath.getPoint(p, camera.position);
+  if(!RM) camera.position.y += 0.06*Math.sin(t*0.8);
+  lookPath.getPoint(p, _look);
+  camera.lookAt(_look);
+
+  // world idle motion
+  if(!RM){
+    wafer.rotation.z = t*0.08;
+    lattices.forEach((l,i)=>{l.rotation.y = t*(0.1+0.04*i); l.rotation.x = 0.3 + t*0.05;});
+    worldPulses.update(t);
+    s3pulses.update(t);
+    s4pulses.update(t);
+  }else{
+    worldPulses.update(0.5); s3pulses.update(0.5); s4pulses.update(0.5);
+  }
+
+  // stations (skip work when far away)
+  const a1 = activation(KEY.s1), a2 = activation(KEY.s2),
+        a3 = activation(KEY.s3), a4 = activation(KEY.s4);
+  if(a1 > 0 || !updateS1.once){ updateS1(a1, t); updateS1.once = true; }
+  updateS2(a2, t);
+  if(a3 > 0 || !updateS3.once){ updateS3(a3, t); updateS3.once = true; }
+  updateS4(Math.max(a4, 0.001), t);
+
+  // captions + hud
+  for(const c of caps){
+    const o = THREE.MathUtils.clamp(1 - Math.abs(p - c.c)/c.h, 0, 1);
+    c.el.style.opacity = (o*o*(3-2*o)).toFixed(3);
+    c.el.style.visibility = o > 0.02 ? 'visible' : 'hidden'; // invisible links must not catch taps
+    c.el.style.transform = c.el.id==='cap-outro'
+      ? `translate(-50%,${(-50+(1-o)*3).toFixed(1)}%)`
+      : `translateY(${((1-o)*14).toFixed(1)}px)`;
+  }
+  bar.style.height = (p*100).toFixed(2)+'%';
+  hint.style.opacity = p < 0.02 ? 1 : 0;
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+<a href="../portfolio.html" id="skipbtn" style="position:fixed;top:16px;right:18px;z-index:50;color:#cfcfca;background:rgba(20,20,19,.55);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:7px 14px;font-size:.82rem;text-decoration:none;backdrop-filter:blur(4px)">Skip → Portfolio</a>
+</body>
+</html>

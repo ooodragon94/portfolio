@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taeil Oh — AI for Semiconductors</title>
+<meta name="description" content="AI Research Engineer at Alsemy. Neural operators and physics-informed models for semiconductor devices — built, shipped, and running in production with SK hynix and Samsung.">
+<meta property="og:title" content="Taeil Oh — AI for Semiconductors">
+<meta property="og:description" content="Four years of neural operators, physics-informed training, and shipping models where customers actually run them. NVIDIA PhysicsNeMo case study.">
+<style>
+  :root{
+    --ink:#33332f; --mut:#6b6b66; --line:#e4e4e0; --surf:#fcfcfb; --page:#f9f9f7;
+    --accent:#c0392b; --blue:#2a78d6; --orange:#eb6834; --gray:#8a8a86;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--ink:#e8e8e4;--mut:#a4a49e;--line:#33332f;--surf:#1a1a19;--page:#0d0d0d;--blue:#5598e7;--accent:#e2604f;--orange:#f28050}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+       color:var(--ink);background:var(--page);line-height:1.65;font-size:16px}
+  .wrap{max-width:860px;margin:0 auto;padding:48px 20px 80px}
+  header h1{font-size:2.1rem;font-weight:300}
+  header h1 b{font-weight:800}
+  .tag{color:var(--accent);font-weight:600;letter-spacing:.06em;font-size:.8rem;text-transform:uppercase;margin-top:4px}
+  .links{margin-top:12px;font-size:.9rem}
+  .links a{color:var(--blue);text-decoration:none;margin-right:16px}
+  h2{font-size:1.12rem;border-bottom:2px solid var(--ink);padding-bottom:6px;margin:48px 0 16px}
+  h2 span{color:var(--accent)}
+  /* project cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .card{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;
+        transition:transform .12s, box-shadow .12s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.07)}
+  .card h3{font-size:1rem;margin-bottom:6px}
+  .card p{font-size:.86rem;color:var(--mut)}
+  .card .go{color:var(--blue);font-size:.82rem;margin-top:10px;font-weight:600}
+  /* detail views */
+  .detail{display:none;background:var(--surf);border:1px solid var(--line);border-radius:14px;
+          padding:26px 26px 30px;margin-top:16px}
+  .detail.open{display:block}
+  .detail h3{font-size:1.25rem;margin-bottom:4px}
+  .detail .sub{color:var(--mut);font-size:.88rem;margin-bottom:16px}
+  .detail p{font-size:.94rem;margin-bottom:12px}
+  .back{color:var(--blue);cursor:pointer;font-size:.86rem;font-weight:600;background:none;border:none;padding:0;margin-bottom:14px}
+  .demo{border:1px solid var(--line);border-radius:10px;padding:16px;margin:18px 0;background:var(--page)}
+  .demo canvas{width:100%;height:auto;display:block;border-radius:6px}
+  .demo img{background:#fff;padding:8px;border-radius:6px}
+  .ctrl{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;align-items:center}
+  .ctrl label{font-size:.82rem;color:var(--mut);display:flex;flex-direction:column;gap:4px;min-width:170px}
+  .ctrl input[type=range]{accent-color:var(--blue)}
+  .ctrl button{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 14px;
+               font-size:.85rem;cursor:pointer;font-weight:600}
+  .val{color:var(--ink);font-weight:600}
+  .note{font-size:.8rem;color:var(--mut);border-left:3px solid var(--accent);padding:8px 12px;margin-top:14px}
+  ul.plain{list-style:none}
+  ul.plain li{padding:9px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+  ul.plain li:last-child{border-bottom:none}
+  ul.bul{margin:0 0 14px 20px}
+  ul.bul li{font-size:.93rem;margin-bottom:6px}
+  ul.bul b{color:var(--ink)}
+  .todo{opacity:.55;border:1px dashed var(--line);border-radius:10px;padding:26px;text-align:center;font-size:.85rem;color:var(--mut)}
+  .venue{color:var(--accent);font-weight:600;font-size:.84rem}
+  .role{color:var(--mut);font-size:.84rem}
+  footer{margin-top:64px;color:var(--mut);font-size:.8rem;border-top:1px solid var(--line);padding-top:16px}
+  .steps{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .step{flex:1;min-width:130px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+        font-size:.8rem;color:var(--mut);background:var(--page);position:relative}
+  .step b{display:block;color:var(--ink);font-size:.84rem;margin-bottom:3px}
+  .step.hot{border-color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Taeil <b>Oh</b></h1>
+  <div class="tag">AI Research Engineer · AI for Semiconductors</div>
+  <p style="color:var(--mut);margin-top:8px">
+    I build AI models for semiconductor devices at Alsemy, and I ship them.
+    Four years of neural operators, physics-informed training, and making models
+    run in customer-controlled environments.</p>
+  <p style="color:var(--mut);font-size:.84rem;margin-top:6px">PyTorch · NVIDIA PhysicsNeMo · DDP / AMP · Weights &amp; Biases · Docker</p>
+  <div class="links">
+    <a href="https://www.linkedin.com/in/taeil-oh-0b497216b" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="mailto:ooodragon94@gmail.com">Email</a>
+    <a href="https://www.nvidia.com/en-us/case-studies/alsemy/" target="_blank" rel="noopener">NVIDIA Case Study ↗</a>
+  </div>
+</header>
+
+<h2><span>Pr</span>ojects — click to explore</h2>
+<div class="cards" id="cards">
+  <div class="card" data-t="retarget">
+    <h3>I–V Retargeting</h3>
+    <p>Move a transistor's curve to new electrical targets without breaking its physics.
+       Running with a memory maker since 2024.</p>
+    <div class="go">Interactive demo →</div>
+  </div>
+  <div class="card" data-t="cv">
+    <h3>C–V Foundation Model</h3>
+    <p>Two measured components in (C_GG, C_GB), the full capacitance matrix out. Trains on CPU-only servers.</p>
+    <div class="go">Interactive demo →</div>
+  </div>
+  <div class="card" data-t="anomaly">
+    <h3>Function-Space Anomaly Detection</h3>
+    <p>Catching physically wrong curves before they poison a model. SISPAD 2024,
+       first author. Also ran in an industrial collaboration.</p>
+    <div class="go">See it work →</div>
+  </div>
+  <div class="card" data-t="leakage">
+    <h3>Leakage Current Modeling</h3>
+    <p>The components too small for BSIM to model well, and too important to ignore
+       at advanced nodes. Shipped to a memory maker.</p>
+    <div class="go">Read more →</div>
+  </div>
+  <div class="card" data-t="onsite">
+    <h3>On-Site Model Adaptation</h3>
+    <p>Fab data can't leave the building, so the training goes to the data.
+       LoRA fine-tuning inside the customer's own environment.</p>
+    <div class="go">How it works →</div>
+  </div>
+</div>
+
+<!-- ═══════════ Detail: Retargeting ═══════════ -->
+<div class="detail" id="d-retarget">
+  <button class="back" onclick="closeAll()">← all projects</button>
+  <h3>I–V Curve Retargeting</h3>
+  <div class="sub">Since Aug 2024 · in production with a major memory maker</div>
+  <p><b>The problem.</b> A device engineer hands you a curve and says: keep the physics, but put the
+     threshold voltage here and the on-current there.</p>
+  <ul class="bul">
+    <li>Many different devices satisfy the same handful of targets — the inverse problem is <b>ill-posed</b>.</li>
+    <li>The traditional route (TCAD reruns, compact-model refits) costs <b>days per iteration</b>.</li>
+  </ul>
+  <p><b>My approach.</b> Treat the curve as a <i>function</i>, not a grid.</p>
+  <ul class="bul">
+    <li>A transformer-based <b>neural operator</b> maps (source curve, target parameters) → retargeted curve.</li>
+    <li>Physics-based losses keep the answer on a physically plausible curve, not just through the target points.</li>
+    <li>Pretrained on large simulation datasets, fine-tuned on measured silicon to <b>&lt;5% error</b>.</li>
+  </ul>
+  <div class="demo">
+    <canvas id="cv1" width="1200" height="640"></canvas>
+    <div class="ctrl">
+      <label>Target V<sub>T</sub> shift: <span class="val" id="v1a">−0.10 V</span>
+        <input type="range" id="s1a" min="-0.18" max="0.12" step="0.005" value="-0.10"></label>
+      <label>Target I<sub>ON</sub> scale: <span class="val" id="v1b">1.30×</span>
+        <input type="range" id="s1b" min="0.6" max="1.6" step="0.02" value="1.30"></label>
+      <label>Subthreshold swing: <span class="val" id="v1c">75 mV/dec</span>
+        <input type="range" id="s1c" min="62" max="95" step="1" value="75"></label>
+    </div>
+    <div class="note">Live demo runs a compact physics model (EKV-style) in your browser to illustrate
+      the <i>problem</i>. The production system replaces this with a pretrained neural operator fine-tuned
+      on measured silicon; proprietary models and data are not included here.</div>
+  </div>
+  <div class="demo">
+    <img src="assets/retarget_demo.png" alt="Actual retargeting model output" style="width:100%;border-radius:6px">
+    <div class="note"><b>Actual model output</b> — a pretrained neural operator bends one synthetic device onto
+    another's electrical targets, holding across linear/saturation transfer, output curve, and
+    g<sub>ds</sub>. Synthetic data (reproducible from public compact models).</div>
+  </div>
+  <div class="demo">
+    <img src="assets/retarget_source_target.png" alt="Retargeting result: source device moved onto new electrical targets" style="width:100%;border-radius:6px">
+    <div class="note"><b>From an internal demo</b> — the fine-tuned model moves a source device (dashed)
+    onto new electrical targets across the output curve (left, lower drive current) and the transfer
+    curve (right, shifted threshold). Circles: model output; blue/red markers: source/target
+    electrical parameters.</div>
+  </div>
+  <div class="demo" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div><img src="assets/retarget_ndr_before.png" alt="Retargeted output curve with negative differential resistance" style="width:100%;border-radius:6px;background:#fff;padding:4px">
+      <div class="note"><b>Why physics losses matter</b> — zoom on one output-curve bias after retargeting:
+      fitting the target points alone lets the curve bend downward in saturation — negative differential
+      resistance no real device shows. Dots: source data; line: retargeted model.</div></div>
+    <div><img src="assets/retarget_ndr_after.png" alt="Same bias, NDR removed by a physics-constraint loss" style="width:100%;border-radius:6px;background:#fff;padding:4px">
+      <div class="note">Same bias with a physics constraint on the saturation slope: the NDR is gone and
+      the curve stays monotone while still meeting the targets. From an internal feature demo.</div></div>
+  </div>
+  <p><b>What made it hard.</b></p>
+  <ul class="bul">
+    <li>Real measurement sweeps disagree with simulation training data — partly from <b>device degradation
+        (HCI/BTI)</b> during measurement. Diagnosing and closing that gap was most of the work.</li>
+    <li>Customer environments are CPU-only and on-premise; the whole flow was optimized to
+        <b>train without a GPU</b>, replacing what used to be a manual, engineer-in-the-loop process.</li>
+  </ul>
+</div>
+
+<!-- ═══════════ Detail: C-V ═══════════ -->
+<div class="detail" id="d-cv">
+  <button class="back" onclick="closeAll()">← all projects</button>
+  <h3>Capacitance Foundation Model</h3>
+  <div class="sub">Sparse-to-dense C–V reconstruction · shipped with CPU-optimized training</div>
+  <p><b>The problem.</b> Capacitance defines how a transistor behaves in a circuit, but getting it is slow.</p>
+  <ul class="bul">
+    <li>Measuring a full C–V surface takes real tester time; TCAD is accurate but takes <b>hours to days</b>.</li>
+    <li>The model targets <b>C<sub>gg</sub> and C<sub>gb</sub></b> — the two dominant components;
+        the rest are small enough to sit in the noise.</li>
+    <li>Small doesn't mean ignorable: BSIM-class models handle effects this small poorly, and they matter
+        more at every node — the same gap the
+        <a href="#" onclick="openDetail('leakage');return false" style="color:var(--blue)">leakage modeling work</a>
+        tackles on the current side.</li>
+  </ul>
+  <p><b>My approach.</b> Reconstruct the whole characteristic from a handful of points.</p>
+  <ul class="bul">
+    <li>A pretrained neural operator with <b>physics consistency built into the architecture</b> —
+        it cannot produce a thermodynamically inconsistent C–V pair.</li>
+    <li>The set of input voltage axes is <b>declarative configuration, not runtime branching</b> —
+        the encoder's embedding layer is sized to the declared input columns, so a one-axis and a
+        two-axis model are distinct instantiations rather than one model masking a channel.</li>
+    <li>Trains on CPU-only servers; <b>meta-learned warm starts</b> cut production training 5× and
+        markedly improve interpolation when data is sparse.</li>
+  </ul>
+  <div class="demo">
+    <canvas id="cv2" width="1200" height="640"></canvas>
+    <div class="ctrl">
+      <label>Measurement points: <span class="val" id="v2a">6</span>
+        <input type="range" id="s2a" min="3" max="14" step="1" value="6"></label>
+      <label>Measurement noise: <span class="val" id="v2b">1.0 %</span>
+        <input type="range" id="s2b" min="0" max="4" step="0.25" value="1"></label>
+      <button id="b2">Resample & reconstruct</button>
+    </div>
+    <div class="note">Illustration: sparse points are sampled from a synthetic device and reconstructed
+      with a physics-basis fit running in your browser. In the shipped system this is a pretrained neural operator;
+      try 3–4 points to see where naive recovery starts to break — that regime is exactly why
+      pretraining on large device families matters.</div>
+  </div>
+  <div class="demo">
+    <img src="assets/cv_sparse_dense.png" alt="Actual C-V reconstruction" style="width:100%;border-radius:6px">
+    <div class="note"><b>Actual model output</b> — reconstruction from 8 bias points on a technology the
+    initialization never saw (inset: absolute error, concentrated at the transition — exactly where
+    sparse recovery is hardest). Synthetic data (reproducible from public compact models).</div>
+  </div>
+  <div class="demo">
+    <img src="assets/meta_convergence.png" alt="Meta-learning convergence" style="width:100%;border-radius:6px">
+    <div class="note"><b>Why meta-learning</b> — adapting to an unseen technology from a meta-learned
+    warm start vs a random initialization: the warm start begins below where scratch training ends.
+    Synthetic held-out devices.</div>
+  </div>
+</div>
+
+<!-- ═══════════ Detail: Leakage ═══════════ -->
+<div class="detail" id="d-leakage">
+  <button class="back" onclick="closeAll()">← all projects</button>
+  <h3>Leakage Current Modeling</h3>
+  <div class="sub">May–Aug 2026 · shipped in a memory maker's release</div>
+  <p><b>The problem.</b> Leakage currents used to be rounding errors. Not anymore.</p>
+  <ul class="bul">
+    <li>As devices shrink, leakage components that BSIM-class models never captured well
+        become a visible part of the device's behavior. The large, well-behaved terms have their own model
+        (the <a href="#" onclick="openDetail('cv');return false" style="color:var(--blue)">C–V work</a>);
+        this project covers the leakage currents that BSIM-class fits miss.</li>
+    <li>Each physical leakage path behaves differently — one lumped correction can't follow them all.</li>
+  </ul>
+  <p><b>My approach.</b> Respect the physics: model the parts, then recombine.</p>
+  <ul class="bul">
+    <li>Each physical leakage component is modeled <b>separately</b>, at a scale where its behavior is learnable.</li>
+    <li>Components are recombined under <b>current conservation</b> into the quantities a tester can actually measure.</li>
+    <li>Shipped in the memory maker's release — extending the product's coverage into bias regions where leakage dominates.</li>
+  </ul>
+  <div class="demo">
+    <img src="assets/leakage_symlog.png" alt="Four terminal currents over 14 decades on a symlog axis, negative currents preserved" style="width:100%;border-radius:6px">
+    <div class="note"><b>Getting the sign right on a log scale</b> — four terminal currents spanning
+    14 decades, two of them changing sign across the bias grid, plotted on a symlog axis with signs
+    preserved. A model that is right in magnitude but wrong in sign lands on the wrong side of zero
+    and shows immediately; here the reconstruction stays on the correct side throughout — median error
+    about 0.005 decades, sign agreement above 99.9% (lines: model, circles: simulated; synthetic
+    public-PDK data).</div>
+  </div>
+</div>
+
+<!-- ═══════════ Detail: On-site ═══════════ -->
+<div class="detail" id="d-onsite">
+  <button class="back" onclick="closeAll()">← all projects</button>
+  <h3>On-Site Model Adaptation</h3>
+  <div class="sub">LoRA fine-tuning where the data lives · secure offline delivery</div>
+  <p><b>The problem.</b> Fab measurement data is among the most guarded IP in the industry.</p>
+  <ul class="bul">
+    <li>It cannot leave the customer's site — often not even the measurement room's network.</li>
+    <li>So how does a shipped model keep learning each customer's process physics?</li>
+  </ul>
+  <p><b>My approach.</b> Move the training to the data.</p>
+  <ul class="bul">
+    <li>A self-contained pipeline runs <b>inside the customer's offline environment</b>.</li>
+    <li>Fine-tunes the deployed model with <b>LoRA</b> — small, cheap, reversible updates.</li>
+    <li>Regression tests guard every customer data convention, because no debugger can follow the code on-site.</li>
+  </ul>
+  <div class="steps" id="steps">
+    <div class="step"><b>1 · Parse</b>measurement sweeps, units &amp; polarity auto-detected</div>
+    <div class="step"><b>2 · Recompute</b>electrical parameters from raw curves</div>
+    <div class="step"><b>3 · Adapt</b>LoRA fine-tune on-site — data never moves</div>
+    <div class="step"><b>4 · Export</b>updated model, same deployment format</div>
+  </div>
+  <p>The result: a <i>static</i> shipped model becomes an <i>adaptable</i> one, and each customer's
+     process physics feeds back into their own model — with zero data leaving their premises.</p>
+</div>
+
+<div class="detail" id="d-anomaly">
+  <button class="back" onclick="closeAll()">← all projects</button>
+  <h3>Function-Space Anomaly Detection</h3>
+  <div class="sub">FuncAnoDe · SISPAD 2024 (first author) · reused in production and an industrial collaboration</div>
+  <p><b>The problem.</b> One bad curve silently poisons a trained model.</p>
+  <ul class="bul">
+    <li>Simulation pipelines occasionally produce curves that are numerically fine but
+        <b>physically wrong</b> — a non-monotonic output curve, a kink no real device would show.</li>
+  </ul>
+  <p><b>My approach.</b> Treat each curve as a function and score it in function space.</p>
+  <ul class="bul">
+    <li><b>Unsupervised</b> — a neural operator learns to reconstruct curves from technologies we trust;
+        a new curve's reconstruction error becomes its anomaly score. No labels needed.</li>
+    <li>The accept/reject threshold is set automatically by <b>kernel density estimation</b> —
+        no engineer hand-tuning a cutoff.</li>
+    <li>Trained on mature technology nodes, tested on a more advanced node:
+        <b>100% accuracy, recall, and precision</b>, where fPCA, K-means, and spectral clustering
+        baselines topped out around 82% (published benchmark).</li>
+    <li>Published at <b>SISPAD 2024</b> (first author), then quietly became infrastructure — it screens
+        training data in the production pipeline and held up in a collaboration with a
+        <b>global equipment maker</b>. The same idea became a <b>PCT patent filing</b> (first inventor).</li>
+  </ul>
+  <div class="demo" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div><img src="assets/funcanode_threshold.png" alt="Reconstruction error and learned threshold" style="width:100%;border-radius:6px">
+      <div class="note">From the SISPAD 2024 paper — reconstruction-error distribution with the KDE-learned
+      threshold (dashed): normal curves cluster left, anomalies land right. No hand-tuned cutoff.</div></div>
+    <div><img src="assets/funcanode_tsne.png" alt="t-SNE of curve embeddings" style="width:100%;border-radius:6px">
+      <div class="note">Curve embeddings across four technology nodes — anomalies separate cleanly
+      in the learned latent space.</div></div>
+  </div>
+  <div class="demo">
+    <img src="assets/anomaly_demo.png" alt="Anomaly screening demo" style="width:100%;border-radius:6px">
+    <div class="note"><b>Actual screen output</b> — 40+ generated device curves; two non-monotonic curves
+    are caught by the dip score (right, log scale) while every physical curve sits at the floor.
+    Synthetic data (reproducible from public compact models).</div>
+  </div>
+</div>
+
+<h2><span>Pu</span>blications</h2>
+<ul class="plain">
+  <li><span class="venue">ICMC 2025</span> · FuncFlow: Generative Neural Operator for Simulation Augmentation <span class="role">— co-author (2nd)</span><br>
+      <span class="role">Diffusion-based generation of device curves, function by function, to fill out sparse simulation datasets.</span></li>
+  <li><span class="venue">SISPAD 2024</span> · Function-level Anomaly Detection for Semiconductors <span class="role">— first author</span><br>
+      <span class="role">The FuncAnoDe work above — unsupervised screening of physically wrong device curves, demonstrated on C–V characteristics in the paper.</span></li>
+  <li><span class="venue">AAAI 2024</span> · Inducing Point Operator Transformer (IPOT) for Solving PDEs <span class="role">— co-author (2nd), implementation lead</span> · <a href="https://github.com/7tl7qns7ch/IPOT" target="_blank" rel="noopener" style="color:var(--blue)">code</a><br>
+      <span class="role">Cross-attention onto a fixed set of induced points makes the operator mesh-independent — any grid in,
+      any grid out, with linear cost. Best-or-comparable accuracy on PDE benchmarks and ERA5 weather with the fewest parameters.</span>
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin-top:10px">
+        <img src="assets/ipot_arch.png" alt="IPOT architecture" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+        <img src="assets/ipot_era5.png" alt="ERA5 prediction with masked input" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+      </div>
+      <span class="role">Left: encoder–processor–decoder with learnable induced queries. Right: ERA5 temperature —
+      the model predicts the full field even when land regions are masked from the input.</span></li>
+</ul>
+
+<h2><span>Pa</span>tents</h2>
+<ul class="plain">
+  <li><b>Granted</b> · Neural-network training for device characteristic prediction (소자 특성 예측 신경망 학습) — KR 10-2992226 <span class="role">(co-inventor)</span></li>
+  <li><b>PCT Int'l</b> · AI-based anomaly detection for device simulation (AI 기반 소자 시뮬레이션 이상 탐지) — PCT/KR2025/009034 <span class="role">(first inventor)</span></li>
+  <li><b>Filed</b> · Neural-network generation of device characteristic data (신경망 기반 소자 특성 데이터 생성) — KR 10-2025-0142499 <span class="role">(first inventor)</span></li>
+  <li><b>Filed</b> · AI-based device degradation compensation (AI 기반 소자 열화 보정) — KR 10-2025-0129623 <span class="role">(first inventor)</span></li>
+  <li><b>Filed</b> · Latent-space diffusion for data generation (잠재공간 디퓨전 데이터 생성) — KR 10-2025-0132254 <span class="role">(co-inventor)</span></li>
+  <li><b>In preparation</b> · Dual-structure neural network for device characteristic prediction (이중 구조 신경망 소자 특성 예측) <span class="role">(first inventor)</span></li>
+</ul>
+
+<footer>
+  © Taeil Oh · Seoul, Korea · Interactive demos run on synthetic, simulated data in your browser.
+  Static figures come from published papers, synthetic reproductions, or internal demos shown at
+  concept level — no proprietary code, models, or customer data are included.
+  <a href="scroll3d/">↺ 3D intro</a>
+</footer>
+</div>
+
+<script>
+// ─────────── view switching ───────────
+const cards=document.getElementById('cards');
+cards.addEventListener('click',e=>{
+  const c=e.target.closest('.card'); if(!c) return;
+  openDetail(c.dataset.t);
+});
+function openDetail(t){closeAll();document.getElementById('d-'+t).classList.add('open');
+  cards.style.display='none';document.getElementById('d-'+t).scrollIntoView({behavior:'smooth',block:'start'});
+  if(t==='retarget') drawIV();
+  if(t==='cv') resampleCV();}
+function closeAll(){
+  document.querySelectorAll('.detail').forEach(d=>d.classList.remove('open'));
+  cards.style.display='grid';
+}
+
+// ─────────── tiny plotting helper ───────────
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function makePlot(cv,xmin,xmax,ymin,ymax,ylog){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,L=90,R=20,T=24,B=64;
+  const X=x=>L+(x-xmin)/(xmax-xmin)*(W-L-R);
+  const Y=y=>{const v=ylog?Math.log10(y):y,a=ylog?Math.log10(ymin):ymin,b=ylog?Math.log10(ymax):ymax;
+              return H-B-(v-a)/(b-a)*(H-T-B);}
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=css('--surf');ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=css('--line');ctx.lineWidth=1.4;ctx.font='30px sans-serif';ctx.fillStyle=css('--mut');
+  // grid + ticks
+  const xt=5;for(let i=0;i<=xt;i++){const x=xmin+(xmax-xmin)*i/xt;
+    ctx.beginPath();ctx.moveTo(X(x),T);ctx.lineTo(X(x),H-B);ctx.stroke();
+    ctx.fillText(x.toFixed(1),X(x)-14,H-B+30);}
+  if(ylog){for(let e=Math.ceil(Math.log10(ymin));e<=Math.floor(Math.log10(ymax));e++){
+      const y=Math.pow(10,e);ctx.beginPath();ctx.moveTo(L,Y(y));ctx.lineTo(W-R,Y(y));ctx.stroke();
+      ctx.fillText('1e'+e,10,Y(y)+7);}}
+  else{const yt2=5;for(let i=0;i<=yt2;i++){const y=ymin+(ymax-ymin)*i/yt2;
+      ctx.beginPath();ctx.moveTo(L,Y(y));ctx.lineTo(W-R,Y(y));ctx.stroke();
+      ctx.fillText(y.toFixed(1),34,Y(y)+7);}}
+  return {ctx,X,Y,
+    line(f,xs,color,w=3,dash=[]){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=w;ctx.setLineDash(dash);
+      ctx.beginPath();xs.forEach((x,i)=>{const y=f(x);i?ctx.lineTo(X(x),Y(y)):ctx.moveTo(X(x),Y(y))});
+      ctx.stroke();ctx.restore();},
+    dots(pts,color){ctx.save();pts.forEach(([x,y])=>{ctx.beginPath();ctx.fillStyle=color;
+      ctx.strokeStyle=css('--surf');ctx.lineWidth=3;ctx.arc(X(x),Y(y),9,0,7);ctx.fill();ctx.stroke();});ctx.restore();},
+    label(t,x,y,color){ctx.save();ctx.fillStyle=color;ctx.font='600 30px sans-serif';ctx.fillText(t,x,y);ctx.restore();}
+  };
+}
+const lin=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
+
+// ─────────── Demo 1: retargeting ───────────
+function ekv(v,vt,ss,ion){const x=(v-vt)/(ss);
+  const g=Math.log(1+Math.exp(Math.min(x,40)));return 8e-13+ion*3.2*Math.pow(ss*g,2);}
+function drawIV(){
+  const vt0=0.50,ion0=6e-4,ss0=0.075;
+  const dvt=+s1a.value, kion=+s1b.value, ss=+s1c.value/1000;
+  v1a.textContent=(dvt>=0?'+':'−')+Math.abs(dvt).toFixed(2)+' V';
+  v1b.textContent=kion.toFixed(2)+'×'; v1c.textContent=Math.round(ss*1000)+' mV/dec';
+  const p=makePlot(cv1,0,1.2,1e-12,5e-3,true);
+  const xs=lin(0,1.2,240);
+  p.line(v=>ekv(v,vt0,ss0,ion0),xs,css('--gray'),2.4,[8,6]);
+  p.line(v=>ekv(v,vt0+dvt,ss,ion0*kion),xs,css('--blue'),3.4);
+  // EPs: const-current Vt + two anchors
+  const it=1e-8;let vt=0.1;for(let v=0.05;v<1.19;v+=0.002){if(ekv(v,vt0+dvt,ss,ion0*kion)>=it){vt=v;break;}}
+  p.dots([[vt,it],[0.8,ekv(0.8,vt0+dvt,ss,ion0*kion)],[1.15,ekv(1.15,vt0+dvt,ss,ion0*kion)]],css('--orange'));
+  p.label('source',p.X(0.86),p.Y(ekv(0.80,vt0,ss0,ion0))+34,css('--gray'));
+  p.label('retargeted',p.X(0.33),p.Y(ekv(0.52,vt0+dvt,ss,ion0*kion))-16,css('--blue'));
+  p.label('target EPs',p.X(vt)+16,p.Y(it)+8,css('--orange'));
+}
+['s1a','s1b','s1c'].forEach(id=>document.getElementById(id).addEventListener('input',drawIV));
+
+// ─────────── Demo 2: C-V sparse→dense ───────────
+const sig=(v,vt,k)=>1/(1+Math.exp(-k*(v-vt)));
+const cvTrue=v=>0.18+0.82*sig(v,0,6)-0.12*Math.exp(-Math.pow((v+0.35)/0.28,2));
+let seed=1;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed/2147483647-0.5)*2;}
+function resampleCV(){
+  const n=+s2a.value, noise=+s2b.value/100;
+  v2a.textContent=n; v2b.textContent=(noise*100).toFixed(1)+' %';
+  const pts=lin(-1.4,1.4,n).map(v=>[v,cvTrue(v)*(1+noise*rnd())]);
+  // physics-basis least squares: c0 + c1*sig + c2*gauss
+  const bases=[v=>1,v=>sig(v,0,6),v=>Math.exp(-Math.pow((v+0.35)/0.28,2))];
+  const A=pts.map(([v])=>bases.map(b=>b(v))), y=pts.map(p=>p[1]);
+  const AT=(m)=>m[0].map((_,j)=>m.map(r=>r[j]));
+  const mul=(a,b)=>a.map(r=>b[0].map((_,j)=>r.reduce((s,x,k)=>s+x*b[k][j],0)));
+  const At=AT(A),AtA=mul(At,A),Aty=mul(At,y.map(v=>[v]));
+  // 3x3 solve (Cramer)
+  const M=AtA,d=det3(M);
+  const c=[0,1,2].map(i=>det3(M.map((r,ri)=>r.map((x,ci)=>ci===i?Aty[ri][0]:x)))/d);
+  const fit=v=>c[0]*bases[0](v)+c[1]*bases[1](v)+c[2]*bases[2](v);
+  const p=makePlot(cv2,-1.5,1.5,0.0,1.1,false);
+  const xs=lin(-1.5,1.5,240);
+  p.line(cvTrue,xs,css('--gray'),2.4,[8,6]);
+  p.line(fit,xs,css('--blue'),3.4);
+  p.dots(pts,css('--orange'));
+  p.label('true device',p.X(-1.42),p.Y(0.26)-14,css('--gray'));
+  p.label('reconstruction',p.X(0.18),p.Y(0.86),css('--blue'));
+}
+function det3(m){return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])
+  -m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]);}
+['s2a','s2b'].forEach(id=>document.getElementById(id).addEventListener('input',resampleCV));
+document.getElementById('b2').addEventListener('click',resampleCV);
+</script>
+</body>
+</html>
