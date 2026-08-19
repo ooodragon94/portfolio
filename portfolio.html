@@ -289,6 +289,21 @@
   </div>
   <p>The result: a <i>static</i> shipped model becomes an <i>adaptable</i> one, and each customer's
      process physics feeds back into their own model — with zero data leaving their premises.</p>
+  <div class="demo">
+    <img src="assets/retarget_lora_physics.png" alt="Controlled ablation: where the retargeting physics lives" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+    <div class="note"><b>Why LoRA specifically — a controlled ablation on one measured device.</b>
+    Same data, same reconstruction-only loss, same steps in all three panels; only <i>what</i> is trained
+    changes. The pretrained model (A) carries the physics — ask for 2× the current and the saturation
+    knee (▼) moves right, ask for half and it moves left — but its baseline misses the silicon and the
+    response is muted. Full fine-tuning (C) nails the baseline and <b>erases the response</b>: the knee
+    barely reacts to the requested targets (★). A LoRA adapter on the encoder with the target-conditioning
+    path frozen (B) gets both: the baseline lands on the measurement <i>and</i> the knee response comes
+    out stronger than before — at 1.3% of the parameters. Zero-shot amplitude still overshoots (B, ×2);
+    the subsequent fine-tune stage locks the targets to &lt;0.1% error while keeping this response.</div>
+  </div>
+  <p><b>What this taught us:</b> the customer-specific residual and the physics live in <i>different parts
+     of the network</i>. Adapt the representation, freeze the conditioning — that is why the on-site
+     pipeline fine-tunes with LoRA instead of full fine-tuning.</p>
 </div>
 
 <div class="detail" id="d-anomaly">
