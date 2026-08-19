@@ -79,7 +79,7 @@
     I build AI models for semiconductor devices at Alsemy, and I ship them.
     Four years of neural operators, physics-informed training, and making models
     run in customer-controlled environments.</p>
-  <p style="color:var(--mut);font-size:.84rem;margin-top:6px">PyTorch · NVIDIA PhysicsNeMo · DDP / AMP · Weights &amp; Biases · Docker</p>
+  <p style="color:var(--mut);font-size:.84rem;margin-top:6px">PyTorch · NVIDIA PhysicsNeMo · DDP / AMP · Weights &amp; Biases · Docker · Claude (agentic workflows)</p>
   <div class="links">
     <a href="https://www.linkedin.com/in/taeil-oh-0b497216b" target="_blank" rel="noopener">LinkedIn</a>
     <a href="mailto:ooodragon94@gmail.com">Email</a>
@@ -97,8 +97,14 @@
   </div>
   <div class="card" data-t="cv">
     <h3>C–V Foundation Model</h3>
-    <p>Two measured components in (C_GG, C_GB), the full capacitance matrix out. Trains on CPU-only servers.</p>
+    <p>Sparse measured bias points in, the full C_GG / C_GB characteristic out. Trains on CPU-only servers.</p>
     <div class="go">Interactive demo →</div>
+  </div>
+  <div class="card" data-t="meta">
+    <h3>Meta-Learned Warm Starts</h3>
+    <p>A network initialization learned across many devices — held-out devices fine-tune
+       to a lower floor, faster, even from 10% of the data.</p>
+    <div class="go">See the evidence →</div>
   </div>
   <div class="card" data-t="anomaly">
     <h3>Function-Space Anomaly Detection</h3>
@@ -152,10 +158,13 @@
       on measured silicon; proprietary models and data are not included here.</div>
   </div>
   <div class="demo">
-    <img src="assets/retarget_demo.png" alt="Actual retargeting model output" style="width:100%;border-radius:6px">
-    <div class="note"><b>Actual model output</b> — a pretrained neural operator bends one synthetic device onto
-    another's electrical targets, holding across linear/saturation transfer, output curve, and
-    g<sub>ds</sub>. Synthetic data (reproducible from public compact models).</div>
+    <img src="assets/retarget_real.png" alt="Production retargeting output on a measured device, both directions" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+    <div class="note"><b>Actual production output</b> — from an internal validation run (device identity and
+    process anonymized). One measured long-channel NMOS retargeted both ways: 2× the drive current (top)
+    and half (bottom). The targets (★) exist only at the <i>defined</i> electrical points — I<sub>lin</sub>
+    at low V<sub>DS</sub>, I<sub>sat</sub> at high V<sub>DS</sub>; everywhere else the curve is shaped by
+    the physics-informed losses, so the full VGS family scales coherently and g<sub>ds</sub> stays smooth
+    and monotone with no kink.</div>
   </div>
   <div class="demo">
     <img src="assets/retarget_source_target.png" alt="Retargeting result: source device moved onto new electrical targets" style="width:100%;border-radius:6px">
@@ -204,8 +213,9 @@
     <li>The set of input voltage axes is <b>declarative configuration, not runtime branching</b> —
         the encoder's embedding layer is sized to the declared input columns, so a one-axis and a
         two-axis model are distinct instantiations rather than one model masking a channel.</li>
-    <li>Trains on CPU-only servers; <b>meta-learned warm starts</b> cut production training 5× and
-        markedly improve interpolation when data is sparse.</li>
+    <li>Trains on CPU-only servers; <b>meta-learned warm starts</b> reach the from-scratch loss floor
+        up to ~6× faster (device-dependent) and markedly improve interpolation when data is sparse —
+        measured properly in the "Meta-Learned Warm Starts" project below.</li>
   </ul>
   <div class="demo">
     <canvas id="cv2" width="1200" height="640"></canvas>
@@ -228,10 +238,9 @@
     sparse recovery is hardest). Synthetic data (reproducible from public compact models).</div>
   </div>
   <div class="demo">
-    <img src="assets/meta_convergence.png" alt="Meta-learning convergence" style="width:100%;border-radius:6px">
-    <div class="note"><b>Why meta-learning</b> — adapting to an unseen technology from a meta-learned
-    warm start vs a random initialization: the warm start begins below where scratch training ends.
-    Synthetic held-out devices.</div>
+    <img src="assets/cv_meta_convergence.png" alt="Meta-learning convergence on held-out devices" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+    <div class="note"><b>Why meta-learning</b> — held-out devices fine-tune from the meta-learned θ₀
+    to a lower floor, faster. Full evaluation in the "Meta-Learned Warm Starts" project.</div>
   </div>
 </div>
 
@@ -284,26 +293,63 @@
   <div class="steps" id="steps">
     <div class="step"><b>1 · Parse</b>measurement sweeps, units &amp; polarity auto-detected</div>
     <div class="step"><b>2 · Recompute</b>electrical parameters from raw curves</div>
-    <div class="step"><b>3 · Adapt</b>LoRA fine-tune on-site — data never moves</div>
+    <div class="step"><b>3 · Adapt, then fine-tune</b>LoRA recon adapt → fine-tune, all on-site — data never moves</div>
     <div class="step"><b>4 · Export</b>updated model, same deployment format</div>
   </div>
   <p>The result: a <i>static</i> shipped model becomes an <i>adaptable</i> one, and each customer's
      process physics feeds back into their own model — with zero data leaving their premises.</p>
   <div class="demo">
-    <img src="assets/retarget_lora_physics.png" alt="Controlled ablation: where the retargeting physics lives" style="width:100%;border-radius:6px;background:#fff;padding:6px">
-    <div class="note"><b>Why LoRA specifically — a controlled ablation on one measured device.</b>
-    Same data, same reconstruction-only loss, same steps in all three panels; only <i>what</i> is trained
-    changes. The pretrained model (A) carries the physics — ask for 2× the current and the saturation
-    knee (▼) moves right, ask for half and it moves left — but its baseline misses the silicon and the
-    response is muted. Full fine-tuning (C) nails the baseline and <b>erases the response</b>: the knee
-    barely reacts to the requested targets (★). A LoRA adapter on the encoder with the target-conditioning
-    path frozen (B) gets both: the baseline lands on the measurement <i>and</i> the knee response comes
-    out stronger than before — at 1.3% of the parameters. Zero-shot amplitude still overshoots (B, ×2);
-    the subsequent fine-tune stage locks the targets to &lt;0.1% error while keeping this response.</div>
+    <img src="assets/retarget_lora_pipeline.png" alt="Two pipelines on one measured device: only the LoRA-adapted pipeline moves the knee in the physical direction" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+    <div class="note"><b>What the LoRA step buys — physics, not just fit.</b> From an internal validation
+    run (device identity and process anonymized). One measured long-channel
+    device, one request (2× drive current), the exact same production fine-tune in both rows — and both
+    rows hit the electrical targets to ≈0% error. The difference is <i>where the saturation knee goes</i>.
+    Straight from simulation pretraining (top), the fine-tune satisfies the numbers by re-scaling the
+    curve: the knee fails to respond in the physical direction — here it even slips 21 mV the wrong way. Insert a short LoRA
+    reconstruction adaptation before fine-tuning (bottom, 1.3% of parameters, conditioning path frozen)
+    and the same fine-tune now moves the knee +28 mV to higher V<sub>DS</sub> — the direction real
+    silicon behaves when it carries more current.</div>
   </div>
   <p><b>What this taught us:</b> the customer-specific residual and the physics live in <i>different parts
-     of the network</i>. Adapt the representation, freeze the conditioning — that is why the on-site
-     pipeline fine-tunes with LoRA instead of full fine-tuning.</p>
+     of the network</i>. If the model wastes its fine-tune budget on closing the sim-to-silicon gap, the
+     physics gets overwritten; close that gap first with a cheap LoRA reconstruction step, and the
+     fine-tune is free to express it. That is why the on-site pipeline adapts with LoRA before
+     fine-tuning instead of fine-tuning harder.</p>
+</div>
+
+<div class="detail" id="d-meta">
+  <button class="back" onclick="closeAll()">← all projects</button>
+  <h3>Meta-Learned Warm Starts for the C–V Model</h3>
+  <div class="sub">Reptile / CTS meta-learning · evaluated on 31 held-out devices across 7 process nodes</div>
+  <p><b>The problem.</b> Every new device means training the charge/capacitance model from scratch —
+     1500 epochs on a CPU-only customer server, per device.</p>
+  <p><b>My approach.</b> Learn the <i>starting point</i>, not the model.</p>
+  <ul class="bul">
+    <li>Optimization-based meta-learning (<b>Reptile</b>, and <b>CTS</b> — continual trajectory shifting)
+        over a task distribution of hundreds of devices from multiple PDKs.</li>
+    <li>The result is a single θ₀ checkpoint that drops into the existing training code —
+        <b>nothing else about the recipe changes</b>.</li>
+    <li>Fused deployment θ (across meta-runs) with signature-based routing; guarded by
+        held-out evaluation at both the device level and the process level.</li>
+  </ul>
+  <div class="demo">
+    <img src="assets/cv_meta_convergence.png" alt="Held-out convergence: warm start vs from scratch" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+    <div class="note"><b>Held-out convergence.</b> Same recipe, only the init changes. On 27 of 31
+    held-out devices (7 nodes) the warm start ends at a lower loss floor — up to 9.3× — and crosses
+    the scratch run's final floor in as little as ~250 of 1500 epochs. The hardest case is a deep-floor
+    350 nm node where the gap closes to ≈parity; reported as-is.</div>
+  </div>
+  <div class="demo">
+    <img src="assets/cv_meta_sparse.png" alt="Sparse fine-tuning: 10% of points" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+    <div class="note"><b>And with 10% of the data.</b> Fine-tuning on every tenth point of a held-out
+    45 nm device: from scratch, the model invents a plausible but wrong C–V shape (12× higher error on
+    the unseen 90%); from the meta-learned start it reconstructs the true shape — including the sharp
+    transition the sparse points barely sample.</div>
+  </div>
+  <p><b>What made it hard.</b> The honest evaluation. Early wins evaporated under stricter protocols
+     (full-data criterion, process-level hold-out, seed-noise controls), so the final claims come from
+     a leave-one-process-out setup with fixed splits — and the one node that stays at parity is
+     reported, not hidden.</p>
 </div>
 
 <div class="detail" id="d-anomaly">
@@ -328,13 +374,18 @@
         training data in the production pipeline and held up in a collaboration with a
         <b>global equipment maker</b>. The same idea became a <b>PCT patent filing</b> (first inventor).</li>
   </ul>
+  <div class="demo">
+    <img src="assets/funcanode_curves.png" alt="Normal vs anomalous C-V curves from the paper" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+    <div class="note">From the SISPAD 2024 paper — what the screen has to catch: (a) a regular simulated
+    C–V family, (b) a simulated anomaly, (c) an augmented anomaly. Numerically fine, physically wrong.</div>
+  </div>
   <div class="demo" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    <div><img src="assets/funcanode_threshold.png" alt="Reconstruction error and learned threshold" style="width:100%;border-radius:6px">
-      <div class="note">From the SISPAD 2024 paper — reconstruction-error distribution with the KDE-learned
+    <div><img src="assets/funcanode_threshold.png" alt="Reconstruction error and learned threshold" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+      <div class="note">Paper figure — reconstruction-error distribution with the KDE-learned
       threshold (dashed): normal curves cluster left, anomalies land right. No hand-tuned cutoff.</div></div>
-    <div><img src="assets/funcanode_tsne.png" alt="t-SNE of curve embeddings" style="width:100%;border-radius:6px">
-      <div class="note">Curve embeddings across four technology nodes — anomalies separate cleanly
-      in the learned latent space.</div></div>
+    <div><img src="assets/funcanode_tsne.png" alt="t-SNE of curve embeddings" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+      <div class="note">Paper figure — curve embeddings across four technology nodes (180/130/55/32 nm);
+      anomalies separate cleanly in the learned latent space.</div></div>
   </div>
   <div class="demo">
     <img src="assets/anomaly_demo.png" alt="Anomaly screening demo" style="width:100%;border-radius:6px">
@@ -349,7 +400,13 @@
   <li><span class="venue">ICMC 2025</span> · FuncFlow: Generative Neural Operator for Simulation Augmentation <span class="role">— co-author (2nd)</span><br>
       <span class="role">Diffusion-based generation of device curves, function by function, to fill out sparse simulation datasets.</span></li>
   <li><span class="venue">SISPAD 2024</span> · Function-level Anomaly Detection for Semiconductors <span class="role">— first author</span><br>
-      <span class="role">The FuncAnoDe work above — unsupervised screening of physically wrong device curves, demonstrated on C–V characteristics in the paper.</span></li>
+      <span class="role">The FuncAnoDe work above — unsupervised screening of physically wrong device curves, demonstrated on C–V characteristics in the paper.</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+        <img src="assets/funcanode_arch.png" alt="FuncAnoDe function encoder-decoder architecture" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+        <img src="assets/funcanode_curves.png" alt="Regular vs anomalous C-V families from the paper" style="width:100%;border-radius:6px;background:#fff;padding:6px">
+      </div>
+      <span class="role">Left: the function encoder–decoder (paper Fig.) — curves in, reconstruction out; the error
+      is the anomaly score. Right: what it catches — regular vs simulated vs augmented anomalous C–V families.</span></li>
   <li><span class="venue">AAAI 2024</span> · Inducing Point Operator Transformer (IPOT) for Solving PDEs <span class="role">— co-author (2nd), implementation lead</span> · <a href="https://github.com/7tl7qns7ch/IPOT" target="_blank" rel="noopener" style="color:var(--blue)">code</a><br>
       <span class="role">Cross-attention onto a fixed set of induced points makes the operator mesh-independent — any grid in,
       any grid out, with linear cost. Best-or-comparable accuracy on PDE benchmarks and ERA5 weather with the fewest parameters.</span>
