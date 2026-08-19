@@ -97,7 +97,7 @@
   </div>
   <div class="card" data-t="cv">
     <h3>C–V Foundation Model</h3>
-    <p>Sparse measured bias points in, the full C_GG / C_GB characteristic out. Trains on CPU-only servers.</p>
+    <p>Two measured components in (C_GG, C_GB), the full capacitance matrix out. Trains on CPU-only servers.</p>
     <div class="go">Interactive demo →</div>
   </div>
   <div class="card" data-t="meta">
@@ -144,20 +144,6 @@
     <li>Pretrained on large simulation datasets, fine-tuned on measured silicon to <b>&lt;5% error</b>.</li>
   </ul>
   <div class="demo">
-    <canvas id="cv1" width="1200" height="640"></canvas>
-    <div class="ctrl">
-      <label>Target V<sub>T</sub> shift: <span class="val" id="v1a">−0.10 V</span>
-        <input type="range" id="s1a" min="-0.18" max="0.12" step="0.005" value="-0.10"></label>
-      <label>Target I<sub>ON</sub> scale: <span class="val" id="v1b">1.30×</span>
-        <input type="range" id="s1b" min="0.6" max="1.6" step="0.02" value="1.30"></label>
-      <label>Subthreshold swing: <span class="val" id="v1c">75 mV/dec</span>
-        <input type="range" id="s1c" min="62" max="95" step="1" value="75"></label>
-    </div>
-    <div class="note">Live demo runs a compact physics model (EKV-style) in your browser to illustrate
-      the <i>problem</i>. The production system replaces this with a pretrained neural operator fine-tuned
-      on measured silicon; proprietary models and data are not included here.</div>
-  </div>
-  <div class="demo">
     <img src="assets/retarget_real.png" alt="Production retargeting output on a measured device, both directions" style="width:100%;border-radius:6px;background:#fff;padding:6px">
     <div class="note"><b>Actual production output</b> — from an internal validation run (device identity and
     process anonymized). One measured long-channel NMOS retargeted both ways: 2× the drive current (top)
@@ -195,21 +181,23 @@
 <div class="detail" id="d-cv">
   <button class="back" onclick="closeAll()">← all projects</button>
   <h3>Capacitance Foundation Model</h3>
-  <div class="sub">Sparse-to-dense C–V reconstruction · shipped with CPU-optimized training</div>
-  <p><b>The problem.</b> Capacitance defines how a transistor behaves in a circuit, but getting it is slow.</p>
+  <div class="sub">Capacitance-matrix completion from two measured components · shipped with CPU-optimized training</div>
+  <p><b>The problem.</b> A circuit needs the full capacitance matrix (C<sub>DD</sub>, C<sub>DG</sub>,
+     C<sub>GD</sub>, C<sub>BB</sub>, …), but only <b>C<sub>GG</sub> and C<sub>GB</sub></b> are practically
+     measurable.</p>
   <ul class="bul">
-    <li>Measuring a full C–V surface takes real tester time; TCAD is accurate but takes <b>hours to days</b>.</li>
-    <li>The model targets <b>C<sub>gg</sub> and C<sub>gb</sub></b> — the two dominant components;
-        the rest are small enough to sit in the noise.</li>
-    <li>Small doesn't mean ignorable: BSIM-class models handle effects this small poorly, and they matter
-        more at every node — the same gap the
+    <li>Inferring the other components from two is <b>badly ill-posed</b> — many matrices are consistent
+        with the same pair of curves.</li>
+    <li>TCAD can compute them, but takes <b>hours to days</b> per device; BSIM-class models handle the
+        small components poorly — the same gap the
         <a href="#" onclick="openDetail('leakage');return false" style="color:var(--blue)">leakage modeling work</a>
         tackles on the current side.</li>
   </ul>
-  <p><b>My approach.</b> Reconstruct the whole characteristic from a handful of points.</p>
+  <p><b>My approach.</b> Don't predict capacitances — predict <i>charge</i>.</p>
   <ul class="bul">
-    <li>A pretrained neural operator with <b>physics consistency built into the architecture</b> —
-        it cannot produce a thermodynamically inconsistent C–V pair.</li>
+    <li>The model fits one charge surface Q(V); every capacitance is a derivative of that surface
+        (Sobolev training), so <b>physics consistency is built into the architecture</b> — the completed
+        matrix cannot be thermodynamically inconsistent.</li>
     <li>The set of input voltage axes is <b>declarative configuration, not runtime branching</b> —
         the encoder's embedding layer is sized to the declared input columns, so a one-axis and a
         two-axis model are distinct instantiations rather than one model masking a channel.</li>
@@ -217,31 +205,6 @@
         up to ~6× faster (device-dependent) and markedly improve interpolation when data is sparse —
         measured properly in the "Meta-Learned Warm Starts" project below.</li>
   </ul>
-  <div class="demo">
-    <canvas id="cv2" width="1200" height="640"></canvas>
-    <div class="ctrl">
-      <label>Measurement points: <span class="val" id="v2a">6</span>
-        <input type="range" id="s2a" min="3" max="14" step="1" value="6"></label>
-      <label>Measurement noise: <span class="val" id="v2b">1.0 %</span>
-        <input type="range" id="s2b" min="0" max="4" step="0.25" value="1"></label>
-      <button id="b2">Resample & reconstruct</button>
-    </div>
-    <div class="note">Illustration: sparse points are sampled from a synthetic device and reconstructed
-      with a physics-basis fit running in your browser. In the shipped system this is a pretrained neural operator;
-      try 3–4 points to see where naive recovery starts to break — that regime is exactly why
-      pretraining on large device families matters.</div>
-  </div>
-  <div class="demo">
-    <img src="assets/cv_sparse_dense.png" alt="Actual C-V reconstruction" style="width:100%;border-radius:6px">
-    <div class="note"><b>Actual model output</b> — reconstruction from 8 bias points on a technology the
-    initialization never saw (inset: absolute error, concentrated at the transition — exactly where
-    sparse recovery is hardest). Synthetic data (reproducible from public compact models).</div>
-  </div>
-  <div class="demo">
-    <img src="assets/cv_meta_convergence.png" alt="Meta-learning convergence on held-out devices" style="width:100%;border-radius:6px;background:#fff;padding:6px">
-    <div class="note"><b>Why meta-learning</b> — held-out devices fine-tune from the meta-learned θ₀
-    to a lower floor, faster. Full evaluation in the "Meta-Learned Warm Starts" project.</div>
-  </div>
 </div>
 
 <!-- ═══════════ Detail: Leakage ═══════════ -->
@@ -346,6 +309,20 @@
     the unseen 90%); from the meta-learned start it reconstructs the true shape — including the sharp
     transition the sparse points barely sample.</div>
   </div>
+  <div class="demo">
+    <canvas id="cv2" width="1200" height="640"></canvas>
+    <div class="ctrl">
+      <label>Measurement points: <span class="val" id="v2a">6</span>
+        <input type="range" id="s2a" min="3" max="14" step="1" value="6"></label>
+      <label>Measurement noise: <span class="val" id="v2b">1.0 %</span>
+        <input type="range" id="s2b" min="0" max="4" step="0.25" value="1"></label>
+      <button id="b2">Resample & reconstruct</button>
+    </div>
+    <div class="note">Illustration: sparse points are sampled from a synthetic device and reconstructed
+      with a physics-basis fit running in your browser. In the shipped system this is a pretrained neural operator;
+      try 3–4 points to see where naive recovery starts to break — that regime is exactly why
+      pretraining on large device families matters.</div>
+  </div>
   <p><b>What made it hard.</b> The honest evaluation. Early wins evaporated under stricter protocols
      (full-data criterion, process-level hold-out, seed-noise controls), so the final claims come from
      a leave-one-process-out setup with fixed splits — and the one node that stays at parity is
@@ -445,8 +422,7 @@ cards.addEventListener('click',e=>{
 });
 function openDetail(t){closeAll();document.getElementById('d-'+t).classList.add('open');
   cards.style.display='none';document.getElementById('d-'+t).scrollIntoView({behavior:'smooth',block:'start'});
-  if(t==='retarget') drawIV();
-  if(t==='cv') resampleCV();}
+  if(t==='meta') resampleCV();}
 function closeAll(){
   document.querySelectorAll('.detail').forEach(d=>d.classList.remove('open'));
   cards.style.display='grid';
@@ -486,23 +462,6 @@ const lin=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
 // ─────────── Demo 1: retargeting ───────────
 function ekv(v,vt,ss,ion){const x=(v-vt)/(ss);
   const g=Math.log(1+Math.exp(Math.min(x,40)));return 8e-13+ion*3.2*Math.pow(ss*g,2);}
-function drawIV(){
-  const vt0=0.50,ion0=6e-4,ss0=0.075;
-  const dvt=+s1a.value, kion=+s1b.value, ss=+s1c.value/1000;
-  v1a.textContent=(dvt>=0?'+':'−')+Math.abs(dvt).toFixed(2)+' V';
-  v1b.textContent=kion.toFixed(2)+'×'; v1c.textContent=Math.round(ss*1000)+' mV/dec';
-  const p=makePlot(cv1,0,1.2,1e-12,5e-3,true);
-  const xs=lin(0,1.2,240);
-  p.line(v=>ekv(v,vt0,ss0,ion0),xs,css('--gray'),2.4,[8,6]);
-  p.line(v=>ekv(v,vt0+dvt,ss,ion0*kion),xs,css('--blue'),3.4);
-  // EPs: const-current Vt + two anchors
-  const it=1e-8;let vt=0.1;for(let v=0.05;v<1.19;v+=0.002){if(ekv(v,vt0+dvt,ss,ion0*kion)>=it){vt=v;break;}}
-  p.dots([[vt,it],[0.8,ekv(0.8,vt0+dvt,ss,ion0*kion)],[1.15,ekv(1.15,vt0+dvt,ss,ion0*kion)]],css('--orange'));
-  p.label('source',p.X(0.86),p.Y(ekv(0.80,vt0,ss0,ion0))+34,css('--gray'));
-  p.label('retargeted',p.X(0.33),p.Y(ekv(0.52,vt0+dvt,ss,ion0*kion))-16,css('--blue'));
-  p.label('target EPs',p.X(vt)+16,p.Y(it)+8,css('--orange'));
-}
-['s1a','s1b','s1c'].forEach(id=>document.getElementById(id).addEventListener('input',drawIV));
 
 // ─────────── Demo 2: C-V sparse→dense ───────────
 const sig=(v,vt,k)=>1/(1+Math.exp(-k*(v-vt)));
